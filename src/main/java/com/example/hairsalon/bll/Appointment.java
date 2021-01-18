@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import javax.persistence.*;
 import java.sql.Date;
 import java.sql.Time;
+import java.sql.Timestamp;
 
 @Component
 @Entity
@@ -13,22 +14,19 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long ID;
-    @Column(name="date")
-    private Date date;
+    @Column(name="timestamp")
+    private Timestamp timestamp;
     @Column(name="message")
     private String message;
-    @Column(name="time")
-    private Time time;
     @Column(name="service")
     private Service service;
 
     public Appointment() {
     }
 
-    public Appointment(Date date, String message, Time time, Service service) {
-        this.date = date;
+    public Appointment(String message, Timestamp timestamp, Service service) {
         this.message = message;
-        this.time = time;
+        this.timestamp = timestamp;
         this.service = service;
     }
 
@@ -40,14 +38,6 @@ public class Appointment {
         this.service = service;
     }
 
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
     public String getMessage() {
         return message;
     }
@@ -56,12 +46,12 @@ public class Appointment {
         this.message = message;
     }
 
-    public Time getTime() {
-        return time;
+    public Timestamp getTimestamp() {
+        return timestamp;
     }
 
-    public void setTime(Time time) {
-        this.time = time;
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
     }
 
     public long getDurationInMilliseconds() {
