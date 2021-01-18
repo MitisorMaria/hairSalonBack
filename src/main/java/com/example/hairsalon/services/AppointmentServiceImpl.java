@@ -31,7 +31,7 @@ public class AppointmentServiceImpl implements AppointmentService{
             Timestamp endExisting = new Timestamp(start.getTime() + a.getDurationInMilliseconds());
             boolean beforeExistingOverlap = startExisting.before(end) && start.before(endExisting);
             boolean afterExistingOverlap = startExisting.before(end) && end.before(endExisting);
-            if(beforeExistingOverlap || afterExistingOverlap || onStartOverlap || onEndOverlap){
+            if(beforeExistingOverlap || afterExistingOverlap){// || onStartOverlap || onEndOverlap){
                 return false;
             }
         }
