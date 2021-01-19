@@ -2,6 +2,7 @@ package com.example.hairsalon.bll;
 
 import org.springframework.stereotype.Component;
 
+
 @Component
 public class EmailMessage {
     private String address;

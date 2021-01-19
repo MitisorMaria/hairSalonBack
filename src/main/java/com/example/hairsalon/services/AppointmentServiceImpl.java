@@ -5,7 +5,8 @@ import com.example.hairsalon.dao.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.sql.Timestamp;
 
@@ -27,6 +28,18 @@ public class AppointmentServiceImpl implements AppointmentService{
         List<Appointment> allAppointments = appointmentRepository.findAll();
         Timestamp start = appointment.getTimestamp();
         Timestamp end = new Timestamp(start.getTime() + appointment.getDurationInMilliseconds());
+
+        boolean beforeNow = start.before(new Timestamp(System.currentTimeMillis()));
+        Long millisInDayStart = start.getTime() % (24 * 60 * 60 * 1000);
+        Long millisInDayEnd = end.getTime() % (24 * 60 * 60 * 1000);
+        boolean startsBeforeOpeningTime = millisInDayStart < 9 * 60 * 60 * 1000;
+        boolean endsAfterClosingTime = millisInDayEnd > 18 * 60 * 60 * 1000;
+
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.setTime(start);
+        boolean onSunday = cal.get(java.util.Calendar.DAY_OF_WEEK) == 1;
+        boolean outsideOfficeHours = startsBeforeOpeningTime || endsAfterClosingTime || onSunday;
+
         for (Appointment a : allAppointments) {
             Timestamp startExisting = a.getTimestamp();
             Timestamp endExisting = new Timestamp(startExisting.getTime() + a.getDurationInMilliseconds());
@@ -35,8 +48,8 @@ public class AppointmentServiceImpl implements AppointmentService{
             boolean insideOverlap = startExisting.before(start) && end.before(endExisting);
             boolean onStartOverlap = startExisting.equals(start);
             boolean onEndOverlap = endExisting.equals(end);
-            boolean beforeNow = start.before(new Timestamp(System.currentTimeMillis()));
-            if(beforeNow || beforeExistingOverlap || afterExistingOverlap || onStartOverlap || onEndOverlap || insideOverlap){
+            if (outsideOfficeHours || beforeNow || beforeExistingOverlap || afterExistingOverlap ||
+                    onStartOverlap || onEndOverlap || insideOverlap) {
                 return false;
             }
         }
