@@ -6,6 +6,7 @@ import javax.persistence.*;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Component
 @Entity
@@ -15,19 +16,22 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long ID;
     @Column(name="timestamp")
-    private Timestamp timestamp;
+    private LocalDateTime timestamp;
     @Column(name="message")
     private String message;
     @Column(name="service")
     private Service service;
+    @Column(name="employee")
+    private Employee employee;
 
     public Appointment() {
     }
 
-    public Appointment(String message, Timestamp timestamp, Service service) {
+    public Appointment(String message, LocalDateTime timestamp, Service service, Employee employee) {
         this.message = message;
         this.timestamp = timestamp;
         this.service = service;
+        this.employee = employee;
     }
 
     public Service getService() {
@@ -38,6 +42,15 @@ public class Appointment {
         this.service = service;
     }
 
+
+    public Employee getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(Employee employee) {
+        this.employee = employee;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -46,27 +59,27 @@ public class Appointment {
         this.message = message;
     }
 
-    public Timestamp getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Timestamp timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 
-    public long getDurationInMilliseconds() {
+    public long getDuration() {
         switch (this.service) {
             case HAIRCUT_WOMEN:
             case DYE_WOMEN:
-                return 2*60*60*1000;
+                return 2*60;
             case STYLE_MEN:
-                return 20*60*1000;
+                return 20;
             case STYLE_WOMEN:
-                return 30*60*1000;
+                return 30;
             case HAIRCUT_MEN:
             case DYE_MEN:
             default:
-                return 60*60*1000;
+                return 60;
         }
     }
 }

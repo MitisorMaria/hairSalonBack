@@ -3,12 +3,12 @@ package com.example.hairsalon.services;
 import com.example.hairsalon.bll.Appointment;
 import com.example.hairsalon.dao.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.sql.Timestamp;
 
 @Service
 public class AppointmentServiceImpl implements AppointmentService{
@@ -25,34 +25,41 @@ public class AppointmentServiceImpl implements AppointmentService{
     }
 
     public boolean validateAppointment(Appointment appointment) {
-        List<Appointment> allAppointments = appointmentRepository.findAll();
-        Timestamp start = appointment.getTimestamp();
-        Timestamp end = new Timestamp(start.getTime() + appointment.getDurationInMilliseconds());
+        ExampleMatcher customExampleMatcher = ExampleMatcher.matchingAny()
+                .withMatcher("employee", ExampleMatcher.GenericPropertyMatchers.contains().ignoreCase());
 
-        boolean beforeNow = start.before(new Timestamp(System.currentTimeMillis()));
-        Long millisInDayStart = start.getTime() % (24 * 60 * 60 * 1000);
-        Long millisInDayEnd = end.getTime() % (24 * 60 * 60 * 1000);
-        boolean startsBeforeOpeningTime = millisInDayStart < 9 * 60 * 60 * 1000;
-        boolean endsAfterClosingTime = millisInDayEnd > 18 * 60 * 60 * 1000;
+        Example<Appointment> example = Example.of(new Appointment(null, null, null, appointment.getEmployee()), customExampleMatcher);
 
-        Calendar cal = GregorianCalendar.getInstance();
-        cal.setTime(start);
-        boolean onSunday = cal.get(java.util.Calendar.DAY_OF_WEEK) == 1;
-        boolean outsideOfficeHours = startsBeforeOpeningTime || endsAfterClosingTime || onSunday;
+        List<Appointment> allAppointments = appointmentRepository.findAll(example);
+        LocalDateTime start = appointment.getTimestamp();
+        LocalDateTime end = start.plusMinutes(appointment.getDuration());
+
+        boolean beforeNow = start.isBefore(LocalDateTime.now());
+        boolean startsBeforeOpeningTime = start.getHour() < 9;
+        boolean endsAfterClosingTime = end.getHour() > 18;
+        boolean startsAfterClosingTime = start.getHour() >= 18;
+
+        boolean onSunday = start.getDayOfWeek().getValue() == 7;
+        boolean outsideOfficeHours = startsBeforeOpeningTime || startsAfterClosingTime || endsAfterClosingTime || onSunday;
 
         for (Appointment a : allAppointments) {
-            Timestamp startExisting = a.getTimestamp();
-            Timestamp endExisting = new Timestamp(startExisting.getTime() + a.getDurationInMilliseconds());
-            boolean beforeExistingOverlap = startExisting.before(end) && start.before(startExisting);
-            boolean afterExistingOverlap = start.before(endExisting) && startExisting.before(start);
-            boolean insideOverlap = startExisting.before(start) && end.before(endExisting);
+            LocalDateTime startExisting = a.getTimestamp();
+            LocalDateTime endExisting = startExisting.plusMinutes(a.getDuration());
+
+            boolean beforeExistingOverlap = startExisting.isBefore(end) && start.isBefore(startExisting);
+            boolean afterExistingOverlap = start.isBefore(endExisting) && startExisting.isBefore(start);
+
+            boolean insideOverlap = startExisting.isBefore(start) && end.isBefore(endExisting);
             boolean onStartOverlap = startExisting.equals(start);
             boolean onEndOverlap = endExisting.equals(end);
-            if (outsideOfficeHours || beforeNow || beforeExistingOverlap || afterExistingOverlap ||
+
+            if (beforeExistingOverlap || afterExistingOverlap ||
                     onStartOverlap || onEndOverlap || insideOverlap) {
                 return false;
             }
         }
+        if (outsideOfficeHours || beforeNow )
+            return false;
         return true;
     }
 
