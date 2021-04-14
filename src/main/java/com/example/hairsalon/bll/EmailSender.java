@@ -10,7 +10,7 @@ import java.util.Properties;
 public class EmailSender {
         public void sendEmail(String address, String messageBody) throws MessagingException{
             final String user="pastele.cailor.f@gmail.com";//change accordingly
-            final String password="dscfwnnrxpfayrfz";//change accordingly
+            final String password="##################";//not real
 
             String to="maria.mitisor@gmail.com";//change accordingly
 
